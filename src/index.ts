@@ -1,27 +1,26 @@
 import { Elysia, t} from "elysia";
+import { cookie } from "@elysiajs/cookie";
+
+import { PrismaClient } from "@prisma/client";
 
 const app = new Elysia()
-    .group("/search", { query: t.Object({ q: t.String() }) },
+    .use(cookie())
+    .group("/posts",
         inner =>{
-            inner.get("/", ({query}) => `qwery: ${query.q}`);
-            inner.get("/movie", ({query}) => `qwery: ${query.q}`);
-            inner.get("/tv", ({query}) => `qwery: ${query.q}`);
-            inner.get("/person", ({query}) => `qwery: ${query.q}`);
-            inner.get("/company", ({query}) => `qwery: ${query.q}`);
-            inner.get("/episode", ({query}) => `qwery: ${query.q}`);
-            inner.get("/review", ({query}) => `qwery: ${query.q}`);
-            inner.get("/award", ({query}) => ` qwery: ${query.q}`);
+            inner.get("/", ({query}) => `get post with id: ${query.q} or get all user posts`);
+            inner.guard({ params: t.Object({ message: t.String(),  title: t.String(), categories: t.Array(t.String())  }) },
+                post => post.post("/", (params)=>{ return "create post" } ) );
             return inner;
     })
-    .group("/title/:id", { params: t.Object({ id: t.String() }) }, app =>{
-        app.get("/", ({params}) => `id: ${params.id}`)
-        app.get("/episodes", ({params}) => `id: ${params.id}`)
-        app.get("/casts", ({params}) => `id: ${params.id}`)
-        app.get("/awards", ({params}) => `id: ${params.id}`)
+    .group("/user", app =>{
+        app.get("/", ({params}) => `user details`);
+        app.get("/:id", ({params}) => `user detail with id: ${params.id}`);
+        app.guard({ params: t.Object({ name: t.String(), surname: t.String(), email: t.String() }) },
+            post => post.post("/", (params)=>{ return "create user" } ) );
         return app;
+    }).get("/",  ()=>{
+        return "get all posts"
     })
-  .listen(3000);
-
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+    .listen(3000, (server)=> {
+      console.log(`🦊 Elysia is running at ${server.hostname}:${server.port}`);
+});
